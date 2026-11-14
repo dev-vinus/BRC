@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerador de Oportunidades</title>
+<script src="./Gerador de Oportunidades_files/html2canvas.min.js.baixados"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#2c8a4c}
+.container{display:flex;gap:30px;padding:25px;align-items:flex-start}
+.left{width:480px;max-width:100%}
+.right{flex:1;display:flex;justify-content:center;min-width:0}
+.card{background:#fff;border-radius:10px;padding:20px;margin-bottom:20px}
+h1{color:#fff;margin:0 0 20px;font-size:38px}
+h3{margin:0 0 14px}
+input[type=text],input[type=date],input[type=number],textarea{font:inherit}
+input[type=text],input[type=date]{width:100%;padding:10px;border:0;background:#eee;border-radius:4px}
+.vaga-row{display:flex;gap:6px;align-items:center;margin-bottom:8px}
+.vaga-row .nome{flex:1;min-width:0}
+.drag{width:30px;min-width:30px;display:flex;align-items:center;justify-content:center;color:#666;font-size:18px;font-weight:700;cursor:grab;user-select:none;transform:rotate(-90deg)}
+.remover{color:#ff1b1b;font-weight:700;cursor:pointer;width:25px;text-align:center}
+.qtd{width:58px;text-align:center;background:#175f3a;color:#fff;border:none;border-radius:4px;padding:10px}
+.btn{padding:11px 16px;border:0;border-radius:25px;font-weight:bold;cursor:pointer;margin:3px 3px 3px 0}
+.add,.export,.primary{background:#13b968;color:#fff}
+.secondary{background:#e8eee9;color:#175f3a}
+.btn:hover{filter:brightness(.96)}
+.msg{color:#b00020;font-size:12px;min-height:16px;margin-top:6px}
+.help{font-size:12px;color:#666;line-height:1.45;margin:8px 0}
+.range-line{display:flex;align-items:center;gap:12px}
+input[type=range]{width:100%;accent-color:#16864b}
+.pixel-readout{font-weight:700;color:#175f3a;white-space:nowrap;min-width:118px;text-align:right}
+.preview-wrap{width:540px;max-width:100%}
+#arte{position:relative;width:540px;max-width:100%;aspect-ratio:1080/1350;overflow:hidden}
+#arte img{width:100%;height:100%;display:block;object-fit:cover}
+.lista{position:absolute;left:30px;top:190px;width:330px;max-width:calc(100% - 60px);color:#02673C;font-weight:800;overflow:hidden}
+.item{display:flex;align-items:center;margin-bottom:8px;line-height:1.12;min-width:0}
+.bullet{width:10px;height:10px;background:#FFBB1F;border-top-right-radius:4px;border-bottom-left-radius:4px;flex-shrink:0;margin-right:20px}
+.item-text{min-width:0;overflow-wrap:anywhere}
+.dataArte{position:absolute;left:120px;bottom:65px;color:#02673C;font-size:14px;font-weight:800;letter-spacing:0}
+#arquivoImport{display:none}
+textarea{width:100%;min-height:90px;padding:10px;border:1px solid #d6ddd8;border-radius:6px;resize:vertical;font-size:12px}
+.status{font-size:12px;color:#175f3a;min-height:16px;margin-top:6px}
+@media(max-width:900px){
+ .container{flex-direction:column;padding:16px}
+ .left{width:100%}
+ .right{width:100%}
+ .preview-wrap{width:min(540px,100%)}
+ #arte{width:100%}
+ h1{font-size:32px}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="left">
+    <h1>Gerador de Oportunidades</h1>
+
+    <div class="card">
+      <h3>Quais vagas deseja divulgar?</h3>
+      <div style="margin-bottom:12px">
+        <button class="btn secondary" type="button" onclick="ordenarAZ()">Ordenar A-Z</button>
+        <button class="btn secondary" type="button" onclick="ordenarQtd()">Ordenar QTD</button>
+      </div>
+      <div id="vagas"></div>
+      <button class="btn add" type="button" onclick="addVaga()">+ Adicionar vaga</button>
+      <div id="limite" class="msg"></div>
+    </div>
+
+    <div class="card">
+      <h3>Data final para candidatura</h3>
+      <input type="date" id="data" onchange="renderArte()">
+    </div>
+
+    <div class="card">
+      <h3>Tamanho dos textos</h3>
+      <div class="range-line">
+        <span style="font-size:12px;color:#666">Menor</span>
+        <input type="range" id="ajusteFonte" min="-6" max="8" step="1" value="0" oninput="renderArte()">
+        <span style="font-size:12px;color:#666">Maior</span>
+      </div>
+      <div class="pixel-readout" id="leituraFonte">Ajuste 0px (—px)</div>
+      <p class="help">O tamanho é calculado automaticamente conforme a quantidade de vagas, o comprimento dos nomes e a altura disponível. Use o controle para fazer o ajuste fino.</p>
+    </div>
+
+    <div class="card">
+      <h3>Compartilhar e importar</h3>
+      <p class="help">Envie os dados para outra pessoa ou receba uma lista preenchida e continue editando aqui. A data final também é incluída.</p>
+      <button class="btn primary" type="button" onclick="copiarDados()">COPIAR DADOS</button>
+      <button class="btn secondary" type="button" onclick="baixarCSV()">BAIXAR CSV</button>
+      <button class="btn secondary" type="button" onclick="document.getElementById('arquivoImport').click()">IMPORTAR TXT / CSV</button>
+      <input id="arquivoImport" type="file" accept=".txt,.csv,text/plain,text/csv" onchange="importarArquivo(event)">
+      <p class="help">Também é possível colar abaixo o texto que alguém enviou pelo Teams ou WhatsApp:</p>
+      <textarea id="textoImportacao" placeholder="Cole aqui os dados recebidos..."></textarea>
+      <button class="btn secondary" type="button" onclick="importarTextoColado()">IMPORTAR TEXTO COLADO</button>
+      <button class="btn secondary" type="button" onclick="document.getElementById('arquivoFundo').click()">MUDAR FUNDO</button>
+      <input id="arquivoFundo" type="file" accept="image/*" onchange="mudarFundo(event)" style="display:none">
+      <div id="statusDados" class="status"></div>
+    </div>
+
+    <button class="btn export" type="button" onclick="exportar()">EXPORTAR ARTE PNG</button>
+  </div>
+
+  <div class="right">
+    <div class="preview-wrap">
+      <div id="arte">
+        <img id="imagemFundo" src="fundo-2x.png" alt="Fundo da arte">
+        <div class="lista" id="listaArte"></div>
+        <div class="dataArte" id="dataArte"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const maxVagas=15;
+const MAX_FONT=20;
+const MIN_FONT=9;
+const LISTA_ALTURA=300;
+let ordemAZ=true;
+let ordemQtd=true;
+
+function criarLinha(nome='',qtd=1){
+  const row=document.createElement('div');
+  row.className='vaga-row';
+  row.innerHTML=`
+    <div class="drag" title="Arraste para reorganizar">|||</div>
+    <input class="nome" type="text" maxlength="32" placeholder="Clique para inserir a vaga" oninput="renderArte()">
+    <input class="qtd" type="number" value="1" min="1" max="99" oninput="validarQuantidade(this);renderArte()">
+    <div class="remover" title="Remover vaga" onclick="removerVaga(this)">X</div>`;
+  row.querySelector('.nome').value=nome;
+  row.querySelector('.qtd').value=qtd;
+  return row;
+}
+
+function preencherLinhas(itens){
+  const cont=document.getElementById('vagas');
+  cont.innerHTML='';
+  const lista=itens.slice(0,maxVagas);
+  if(!lista.length) lista.push({nome:'',qtd:1});
+  lista.forEach(v=>cont.appendChild(criarLinha(v.nome,v.qtd)));
+  document.getElementById('limite').innerText=itens.length>maxVagas
+    ? `Foram recebidas ${itens.length} vagas; somente as primeiras ${maxVagas} foram importadas.` : '';
+  renderArte();
+}
+
+function validarQuantidade(input){
+  let n=parseInt(input.value,10);
+  if(!Number.isFinite(n)||n<1)n=1;
+  if(n>99)n=99;
+  input.value=n;
+}
+function removerVaga(el){
+  el.closest('.vaga-row').remove();
+  document.getElementById('limite').innerText='';
+  if(!document.querySelectorAll('.vaga-row').length)
+    document.getElementById('vagas').appendChild(criarLinha());
+  renderArte();
+}
+function addVaga(){
+  const cont=document.getElementById('vagas');
+  if(cont.children.length>=maxVagas){
+    document.getElementById('limite').innerText='Máximo de 15 vagas atingido.';
+    return;
+  }
+  cont.appendChild(criarLinha());
+  document.getElementById('limite').innerText='';
+  renderArte();
+}
+function ordenarAZ(){
+  const cont=document.getElementById('vagas');
+  const rows=[...cont.querySelectorAll('.vaga-row')];
+  rows.sort((a,b)=>{
+    const x=a.querySelector('.nome').value.toLocaleUpperCase('pt-BR');
+    const y=b.querySelector('.nome').value.toLocaleUpperCase('pt-BR');
+    return ordemAZ?x.localeCompare(y,'pt-BR'):y.localeCompare(x,'pt-BR');
+  });
+  rows.forEach(r=>cont.appendChild(r));
+  ordemAZ=!ordemAZ;
+  renderArte();
+}
+function ordenarQtd(){
+  const cont=document.getElementById('vagas');
+  const rows=[...cont.querySelectorAll('.vaga-row')];
+  rows.sort((a,b)=>{
+    const x=Number(a.querySelector('.qtd').value);
+    const y=Number(b.querySelector('.qtd').value);
+    return ordemQtd?y-x:x-y;
+  });
+  rows.forEach(r=>cont.appendChild(r));
+  ordemQtd=!ordemQtd;
+  renderArte();
+}
+function formatarData(valor){
+  if(!valor)return '';
+  const d=new Date(valor+'T12:00:00');
+  const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  return String(d.getDate()).padStart(2,'0')+' de '+meses[d.getMonth()]+' de '+d.getFullYear();
+}
+function obterVagas(){
+  return [...document.querySelectorAll('.vaga-row')].map(r=>({
+    nome:r.querySelector('.nome').value.trim(),
+    qtd:Math.max(1,Math.min(99,parseInt(r.querySelector('.qtd').value,10)||1))
+  })).filter(v=>v.nome);
+}
+function medirTexto(texto,fontSize){
+  const canvas=medirTexto.canvas||(medirTexto.canvas=document.createElement('canvas'));
+  const ctx=canvas.getContext('2d');
+  ctx.font=`800 ${fontSize}px Arial`;
+  return ctx.measureText(texto).width;
+}
+function calcularFonte(vagas){
+  const lista=document.getElementById('listaArte');
+  const larguraTexto=330-10-20;
+  const nomes=vagas.map(v=>`${v.nome} (${v.qtd})`);
+  const qtd=nomes.length;
+  if(!qtd)return MAX_FONT;
+  // Procura o maior tamanho que respeita simultaneamente largura e altura.
+  for(let fs=MAX_FONT;fs>=MIN_FONT;fs-=0.1){
+    const alturaLinha=fs*1.16;
+    const espacoVertical=Math.max(2,fs*0.40);
+    const alturaTotal=qtd*alturaLinha+Math.max(0,qtd-1)*espacoVertical;
+    const larguraMaxima=Math.max(...nomes.map(t=>medirTexto(t,fs)));
+    if(alturaTotal<=LISTA_ALTURA && larguraMaxima<=larguraTexto) return Math.round(fs*10)/10;
+  }
+  return MIN_FONT;
+}
+function renderArte(){
+  const lista=document.getElementById('listaArte');
+  lista.innerHTML='';
+  const vagas=obterVagas();
+  const base=calcularFonte(vagas);
+  const ajuste=Number(document.getElementById('ajusteFonte').value||0);
+  const fonte=Math.max(MIN_FONT,Math.min(24,base+ajuste));
+  const escala=fonte/MAX_FONT;
+  const margem=Math.max(2,8*escala);
+  const gap=Math.max(5,20*escala);
+  const bullet=Math.max(5,10*escala);
+  lista.style.fontSize=fonte+'px';
+  lista.style.lineHeight='1.12';
+  lista.style.maxHeight=LISTA_ALTURA+'px';
+
+  vagas.forEach(v=>{
+    const div=document.createElement('div');
+    div.className='item';
+    div.style.marginBottom=margem+'px';
+    div.style.lineHeight='1.12';
+    const bolinha=document.createElement('span');
+    bolinha.className='bullet';
+    bolinha.style.width=bullet+'px';
+    bolinha.style.height=bullet+'px';
+    bolinha.style.marginRight=gap+'px';
+    const texto=document.createElement('span');
+    texto.className='item-text';
+    texto.textContent=`${v.nome} (${v.qtd})`;
+    div.append(bolinha,texto);
+    lista.appendChild(div);
+  });
+  const leitura=document.getElementById('leituraFonte');
+  leitura.textContent=`Ajuste ${ajuste>0?'+':''}${ajuste}px (${fonte.toFixed(1).replace('.0','')}px)`;
+  document.getElementById('dataArte').innerText=formatarData(document.getElementById('data').value);
+}
+
+function dadosEmCSV(){
+  const data=document.getElementById('data').value||'';
+  const linhas=[['Vaga','Quantidade','Data final para candidatura']];
+  obterVagas().forEach(v=>linhas.push([v.nome,String(v.qtd),data]));
+  return linhas.map(l=>l.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(';')).join('\r\n');
+}
+async function copiarDados(){
+  const texto=dadosEmCSV();
+  try{
+    await navigator.clipboard.writeText(texto);
+    document.getElementById('statusDados').textContent='Dados copiados. Agora é só colar no Teams, WhatsApp ou outro canal.';
+  }catch(e){
+    const area=document.getElementById('textoImportacao');
+    area.value=texto;area.focus();area.select();
+    document.getElementById('statusDados').textContent='Selecione o texto exibido e copie manualmente (Ctrl+C).';
+  }
+}
+function baixarCSV(){
+  const blob=new Blob(['\uFEFF'+dadosEmCSV()],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const d=new Date();
+  a.href=url;
+  a.download=`oportunidades_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}.csv`;
+  a.click();URL.revokeObjectURL(url);
+  document.getElementById('statusDados').textContent='Arquivo CSV gerado com vagas, quantidades e data final.';
+}
+function analisarCSV(texto){
+  const primeira=(texto.split(/\r?\n/).find(l=>l.trim())||'');
+  const delimitador=(primeira.match(/;/g)||[]).length >= (primeira.match(/,/g)||[]).length?';':',';
+  const linhas=[];let linha=[],campo='',aspas=false;
+  for(let i=0;i<texto.length;i++){
+    const ch=texto[i],prox=texto[i+1];
+    if(ch==='"'&&aspas&&prox==='"'){campo+='"';i++;}
+    else if(ch==='"'){aspas=!aspas;}
+    else if(ch===delimitador&&!aspas){linha.push(campo);campo='';}
+    else if((ch==='\n'||ch==='\r')&&!aspas){
+      if(ch==='\r'&&prox==='\n')i++;
+      linha.push(campo);if(linha.some(c=>c.trim()))linhas.push(linha);
+      linha=[];campo='';
+    }else campo+=ch;
+  }
+  if(campo.length||linha.length){linha.push(campo);if(linha.some(c=>c.trim()))linhas.push(linha);}
+  return linhas;
+}
+function importarTexto(texto){
+  const linhas=analisarCSV(texto.replace(/^\uFEFF/,''));
+  if(!linhas.length)throw new Error('O conteúdo está vazio ou não foi reconhecido.');
+  let inicio=0,idxNome=0,idxQtd=1,idxData=2;
+  const cab=linhas[0].map(x=>x.trim().toLocaleLowerCase('pt-BR'));
+  const temCab=cab.some(x=>x.includes('vaga')||x.includes('nome')||x.includes('quantidade')||x.includes('data'));
+  if(temCab){
+    inicio=1;
+    idxNome=cab.findIndex(x=>x.includes('vaga')||x.includes('nome'));
+    idxQtd=cab.findIndex(x=>x.includes('quantidade')||x==='qtd');
+    idxData=cab.findIndex(x=>x.includes('data'));
+    if(idxNome<0)idxNome=0;
+    if(idxQtd<0)idxQtd=1;
+  }
+  const itens=[];let data='';
+  for(let i=inicio;i<linhas.length;i++){
+    const c=linhas[i];
+    const nome=(c[idxNome]||'').trim();
+    if(!nome)continue;
+    const qtd=parseInt((c[idxQtd]||'1').trim(),10)||1;
+    const dataLinha=idxData>=0?(c[idxData]||'').trim():'';
+    if(dataLinha)data=normalizarData(dataLinha);
+    itens.push({nome:nome.slice(0,32),qtd:Math.max(1,Math.min(99,qtd))});
+  }
+  if(!itens.length)throw new Error('Não encontrei nenhuma vaga no conteúdo. Confira se há colunas Vaga e Quantidade.');
+  preencherLinhas(itens);
+  if(data)document.getElementById('data').value=data;
+  renderArte();
+  document.getElementById('statusDados').textContent=`Importação concluída: ${Math.min(itens.length,maxVagas)} de ${itens.length} vaga(s) carregada(s).`;
+}
+function normalizarData(valor){
+  const v=valor.trim();
+  if(/^\d{4}-\d{2}-\d{2}$/.test(v))return v;
+  const br=v.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if(br)return `${br[3]}-${br[2]}-${br[1]}`;
+  return '';
+}
+function importarTextoColado(){
+  try{importarTexto(document.getElementById('textoImportacao').value);}
+  catch(e){document.getElementById('statusDados').textContent=e.message;}
+}
+function importarArquivo(event){
+  const arquivo=event.target.files[0];
+  if(!arquivo)return;
+  const leitor=new FileReader();
+  leitor.onload=()=>{try{importarTexto(String(leitor.result||''));}catch(e){document.getElementById('statusDados').textContent=e.message;}};
+  leitor.onerror=()=>document.getElementById('statusDados').textContent='Não foi possível ler o arquivo.';
+  leitor.readAsText(arquivo,'UTF-8');
+  event.target.value='';
+}
+function mudarFundo(event){
+  const arquivo=event.target.files && event.target.files[0];
+  if(!arquivo)return;
+  if(!arquivo.type.startsWith('image/')){
+    document.getElementById('statusDados').textContent='Selecione um arquivo de imagem válido.';
+    event.target.value='';
+    return;
+  }
+  const leitor=new FileReader();
+  leitor.onload=()=>{
+    const img=document.getElementById('imagemFundo');
+    img.onload=()=>{
+      document.getElementById('statusDados').textContent='Fundo alterado para esta sessão.';
+    };
+    img.onerror=()=>{
+      document.getElementById('statusDados').textContent='Não foi possível carregar essa imagem.';
+    };
+    img.src=leitor.result;
+  };
+  leitor.onerror=()=>document.getElementById('statusDados').textContent='Não foi possível ler a imagem selecionada.';
+  leitor.readAsDataURL(arquivo);
+  event.target.value='';
+}
+
+async function exportar(){
+  if(typeof html2canvas!=='function'){
+    alert('Não foi possível carregar html2canvas. Verifique se a pasta Gerador de Oportunidades_files está junto do HTML.');
+    return;
+  }
+  try{
+    const canvas=await html2canvas(document.getElementById('arte'),{scale:2,useCORS:true,backgroundColor:null});
+    const a=document.createElement('a');
+    const d=new Date();
+    a.download=`oportunidades_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}.png`;
+    a.href=canvas.toDataURL('image/png');a.click();
+  }catch(e){alert('Não foi possível exportar a imagem. Verifique se o arquivo de fundo está disponível.');}
+}
+
+// Inicializa com uma linha vazia, sem exigir base de dados local.
+document.getElementById('vagas').appendChild(criarLinha());
+renderArte();
+
+// Reorganização por arrastar e soltar as linhas.
+let linhaArrastada=null;
+document.getElementById('vagas').addEventListener('dragstart',e=>{
+  const row=e.target.closest('.vaga-row');if(!row)return;
+  linhaArrastada=row;e.dataTransfer.effectAllowed='move';
+});
+document.getElementById('vagas').addEventListener('dragover',e=>{
+  e.preventDefault();
+  const alvo=e.target.closest('.vaga-row');
+  if(!linhaArrastada||!alvo||alvo===linhaArrastada)return;
+  const rect=alvo.getBoundingClientRect();
+  const depois=e.clientY>rect.top+rect.height/2;
+  alvo.parentNode.insertBefore(linhaArrastada,depois?alvo.nextSibling:alvo);
+  renderArte();
+});
+document.getElementById('vagas').addEventListener('dragend',()=>linhaArrastada=null);
+document.getElementById('vagas').addEventListener('mousedown',e=>{
+  const handle=e.target.closest('.drag');if(!handle)return;
+  const row=handle.closest('.vaga-row');row.draggable=true;
+});
+document.getElementById('vagas').addEventListener('mouseup',()=>{
+  document.querySelectorAll('.vaga-row').forEach(r=>r.draggable=false);
+});
+</script>
+</body>
+</html>
