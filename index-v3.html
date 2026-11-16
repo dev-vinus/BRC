@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gerador de Oportunidades</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,sans-serif;background:#2c8a4c}
@@ -31,13 +30,12 @@ input[type=text],input[type=date]{width:100%;padding:10px;border:0;background:#e
 input[type=range]{width:100%;accent-color:#16864b}
 .pixel-readout{font-weight:700;color:#175f3a;white-space:nowrap;min-width:118px;text-align:right}
 .preview-wrap{width:540px;max-width:100%}
-#arte{position:relative;width:540px;max-width:100%;aspect-ratio:1080/1350;overflow:hidden}
-#arte img{width:100%;height:100%;display:block;object-fit:cover}
-.lista{position:absolute;left:30px;top:190px;width:330px;max-width:calc(100% - 60px);color:#02673C;font-weight:800;overflow:hidden}
-.item{display:flex;align-items:center;margin-bottom:8px;line-height:1.12;min-width:0}
-.bullet{width:10px;height:10px;background:#FFBB1F;border-top-right-radius:4px;border-bottom-left-radius:4px;flex-shrink:0;margin-right:20px}
-.item-text{min-width:0;overflow-wrap:anywhere}
-.dataArte{position:absolute;left:120px;bottom:65px;color:#02673C;font-size:14px;font-weight:800;letter-spacing:0}
+#arte{position:relative;width:540px;max-width:100%;height:auto;overflow:hidden}
+#arteCanvas{display:block;width:100%;height:auto;aspect-ratio:3188/3983; background:#fff; cursor:default}
+.preview-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;justify-content:center}
+.canvas-menu{position:fixed;z-index:9999;display:none;background:#fff;border:1px solid #cbd5ce;border-radius:7px;box-shadow:0 4px 16px #0003;padding:5px}
+.canvas-menu button{border:0;background:#fff;padding:9px 13px;border-radius:4px;font:inherit;cursor:pointer;color:#175f3a}
+.canvas-menu button:hover{background:#e8eee9}
 #arquivoImport{display:none}
 textarea{width:100%;min-height:90px;padding:10px;border:1px solid #d6ddd8;border-radius:6px;resize:vertical;font-size:12px}
 .status{font-size:12px;color:#175f3a;min-height:16px;margin-top:6px}
@@ -98,16 +96,20 @@ textarea{width:100%;min-height:90px;padding:10px;border:1px solid #d6ddd8;border
       <div id="statusDados" class="status"></div>
     </div>
 
-    <button class="btn export" type="button" onclick="exportar()">EXPORTAR ARTE PNG</button>
   </div>
 
   <div class="right">
     <div class="preview-wrap">
       <div id="arte">
-        <img id="imagemFundo" src="fundo-2x.png" alt="Fundo da arte">
-        <div class="lista" id="listaArte"></div>
-        <div class="dataArte" id="dataArte"></div>
+        <canvas id="arteCanvas" width="3188" height="3983" aria-label="Prévia da arte de oportunidades"></canvas>
       </div>
+      <div class="preview-actions">
+        <button class="btn primary" type="button" onclick="copiarImagem()">COPIAR IMAGEM</button>
+        <button class="btn export" type="button" onclick="exportar()">EXPORTAR ARTE PNG</button>
+      </div>
+    </div>
+    <div id="canvasMenu" class="canvas-menu" role="menu">
+      <button type="button" onclick="copiarImagem();fecharMenuCanvas()">Copiar imagem</button>
     </div>
   </div>
 </div>
@@ -203,6 +205,28 @@ function obterVagas(){
     qtd:Math.max(1,Math.min(99,parseInt(r.querySelector('.qtd').value,10)||1))
   })).filter(v=>v.nome);
 }
+const LARGURA_CANVAS=3188;
+const ALTURA_CANVAS=3983;
+const LARGURA_BASE=540;
+const ALTURA_BASE=675;
+const canvasArte=document.getElementById('arteCanvas');
+const ctxArte=canvasArte.getContext('2d');
+const imagemFundo=new Image();
+function fecharMenuCanvas(){document.getElementById('canvasMenu').style.display='none';}
+canvasArte.addEventListener('contextmenu',e=>{
+  e.preventDefault();
+  const menu=document.getElementById('canvasMenu');
+  menu.style.display='block';
+  const largura=menu.offsetWidth||150, altura=menu.offsetHeight||45;
+  menu.style.left=Math.min(e.clientX,window.innerWidth-largura-8)+'px';
+  menu.style.top=Math.min(e.clientY,window.innerHeight-altura-8)+'px';
+});
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#canvasMenu'))fecharMenuCanvas();
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')fecharMenuCanvas();});
+let fundoCarregado=false;
+
 function medirTexto(texto,fontSize){
   const canvas=medirTexto.canvas||(medirTexto.canvas=document.createElement('canvas'));
   const ctx=canvas.getContext('2d');
@@ -210,12 +234,10 @@ function medirTexto(texto,fontSize){
   return ctx.measureText(texto).width;
 }
 function calcularFonte(vagas){
-  const lista=document.getElementById('listaArte');
   const larguraTexto=330-10-20;
   const nomes=vagas.map(v=>`${v.nome} (${v.qtd})`);
   const qtd=nomes.length;
   if(!qtd)return MAX_FONT;
-  // Procura o maior tamanho que respeita simultaneamente largura e altura.
   for(let fs=MAX_FONT;fs>=MIN_FONT;fs-=0.1){
     const alturaLinha=fs*1.16;
     const espacoVertical=Math.max(2,fs*0.40);
@@ -225,41 +247,91 @@ function calcularFonte(vagas){
   }
   return MIN_FONT;
 }
+function desenharFundo(ctx){
+  if(!fundoCarregado || !imagemFundo.naturalWidth)return;
+  const iw=imagemFundo.naturalWidth, ih=imagemFundo.naturalHeight;
+  const escala=Math.max(LARGURA_CANVAS/iw,ALTURA_CANVAS/ih);
+  const sw=LARGURA_CANVAS/escala, sh=ALTURA_CANVAS/escala;
+  const sx=(iw-sw)/2, sy=(ih-sh)/2;
+  ctx.drawImage(imagemFundo,sx,sy,sw,sh,0,0,LARGURA_CANVAS,ALTURA_CANVAS);
+}
+function quebrarTexto(ctx,texto,largura){
+  const palavras=texto.split(/\s+/);
+  const linhas=[];let linha='';
+  for(const palavra of palavras){
+    const tentativa=linha?`${linha} ${palavra}`:palavra;
+    if(ctx.measureText(tentativa).width<=largura || !linha){
+      linha=tentativa;
+    }else{
+      linhas.push(linha);linha=palavra;
+    }
+  }
+  if(linha)linhas.push(linha);
+  return linhas;
+}
 function renderArte(){
-  const lista=document.getElementById('listaArte');
-  lista.innerHTML='';
+  if(!canvasArte || !ctxArte)return;
   const vagas=obterVagas();
   const base=calcularFonte(vagas);
   const ajuste=Number(document.getElementById('ajusteFonte').value||0);
   const fonte=Math.max(MIN_FONT,Math.min(24,base+ajuste));
-  const escala=fonte/MAX_FONT;
-  const margem=Math.max(2,8*escala);
-  const gap=Math.max(5,20*escala);
-  const bullet=Math.max(5,10*escala);
-  lista.style.fontSize=fonte+'px';
-  lista.style.lineHeight='1.12';
-  lista.style.maxHeight=LISTA_ALTURA+'px';
+  const escalaX=LARGURA_CANVAS/LARGURA_BASE;
+  const escalaY=ALTURA_CANVAS/ALTURA_BASE;
+  ctxArte.clearRect(0,0,LARGURA_CANVAS,ALTURA_CANVAS);
+  desenharFundo(ctxArte);
+  ctxArte.save();
+  ctxArte.scale(escalaX,escalaY);
 
-  vagas.forEach(v=>{
-    const div=document.createElement('div');
-    div.className='item';
-    div.style.marginBottom=margem+'px';
-    div.style.lineHeight='1.12';
-    const bolinha=document.createElement('span');
-    bolinha.className='bullet';
-    bolinha.style.width=bullet+'px';
-    bolinha.style.height=bullet+'px';
-    bolinha.style.marginRight=gap+'px';
-    const texto=document.createElement('span');
-    texto.className='item-text';
-    texto.textContent=`${v.nome} (${v.qtd})`;
-    div.append(bolinha,texto);
-    lista.appendChild(div);
-  });
+  const larguraLista=330;
+  const alturaLista=LISTA_ALTURA;
+  const xLista=30, yLista=190;
+  const larguraTexto=larguraLista-10-20;
+  const margem=Math.max(2,8*(fonte/MAX_FONT));
+  const gap=Math.max(5,20*(fonte/MAX_FONT));
+  const bullet=Math.max(5,10*(fonte/MAX_FONT));
+  const alturaLinha=fonte*1.12;
+  ctxArte.save();
+  ctxArte.beginPath();ctxArte.rect(xLista,yLista,larguraLista,alturaLista);ctxArte.clip();
+  ctxArte.fillStyle='#02673C';
+  ctxArte.font=`800 ${fonte}px Arial`;
+  ctxArte.textBaseline='top';
+  let y=yLista;
+  for(const vaga of vagas){
+    const texto=`${vaga.nome} (${vaga.qtd})`;
+    const linhas=quebrarTexto(ctxArte,texto,larguraTexto);
+    const alturaTexto=linhas.length*alturaLinha;
+    const by=y+(Math.max(alturaLinha,bullet)-bullet)/2;
+    ctxArte.fillStyle='#FFBB1F';
+    ctxArte.beginPath();
+    const bx=xLista, br=4;
+    ctxArte.moveTo(bx,by);ctxArte.lineTo(bx+bullet,by);ctxArte.lineTo(bx+bullet,by+bullet-br);ctxArte.quadraticCurveTo(bx+bullet,by+bullet,bx+bullet-br,by+bullet);ctxArte.lineTo(bx+br,by+bullet);ctxArte.quadraticCurveTo(bx,by+bullet,bx,by+bullet-br);ctxArte.closePath();ctxArte.fill();
+    ctxArte.fillStyle='#02673C';
+    linhas.forEach((linha,i)=>ctxArte.fillText(linha,xLista+bullet+gap,y+i*alturaLinha));
+    y+=Math.max(alturaLinha,alturaTexto)+margem;
+    if(y>yLista+alturaLista)break;
+  }
+  ctxArte.restore();
+
+  const data=formatarData(document.getElementById('data').value);
+  if(data){
+    ctxArte.fillStyle='#02673C';
+    ctxArte.font='800 14px Arial';
+    ctxArte.textBaseline='bottom';
+    ctxArte.fillText(data,120,ALTURA_BASE-65);
+  }
+  ctxArte.restore();
   const leitura=document.getElementById('leituraFonte');
   leitura.textContent=`Ajuste ${ajuste>0?'+':''}${ajuste}px (${fonte.toFixed(1).replace('.0','')}px)`;
-  document.getElementById('dataArte').innerText=formatarData(document.getElementById('data').value);
 }
+
+imagemFundo.onload=()=>{fundoCarregado=true;renderArte();};
+imagemFundo.onerror=()=>{
+  fundoCarregado=false;
+  const status=document.getElementById('statusDados');
+  if(status)status.textContent='Não foi possível carregar fundo-2x.png. Use MUDAR FUNDO para selecionar uma imagem.';
+  renderArte();
+};
+imagemFundo.src='fundo-2x.png';
 
 function dadosEmCSV(){
   const data=document.getElementById('data').value||'';
@@ -361,67 +433,54 @@ function mudarFundo(event){
   if(!arquivo)return;
   if(!arquivo.type.startsWith('image/')){
     document.getElementById('statusDados').textContent='Selecione um arquivo de imagem válido.';
-    event.target.value='';
-    return;
+    event.target.value='';return;
   }
   const leitor=new FileReader();
   leitor.onload=()=>{
-    const img=document.getElementById('imagemFundo');
-    img.onload=()=>{
+    imagemFundo.onload=()=>{
+      fundoCarregado=true;renderArte();
       document.getElementById('statusDados').textContent='Fundo alterado para esta sessão.';
     };
-    img.onerror=()=>{
+    imagemFundo.onerror=()=>{
+      fundoCarregado=false;
       document.getElementById('statusDados').textContent='Não foi possível carregar essa imagem.';
     };
-    img.src=leitor.result;
+    imagemFundo.src=String(leitor.result||'');
   };
   leitor.onerror=()=>document.getElementById('statusDados').textContent='Não foi possível ler a imagem selecionada.';
   leitor.readAsDataURL(arquivo);
   event.target.value='';
 }
-
+function nomeArquivoArte(extensao){
+  const d=new Date();
+  return `oportunidades_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}.${extensao}`;
+}
+function canvasParaBlob(){
+  return new Promise((resolve,reject)=>{
+    canvasArte.toBlob(blob=>blob?resolve(blob):reject(new Error('Falha ao gerar o PNG.')),'image/png');
+  });
+}
 async function exportar(){
-  if(typeof html2canvas!=='function'){
-    alert('Não foi possível carregar html2canvas. Verifique se a pasta Gerador de Oportunidades_files está junto do HTML.');
-    return;
+  try{
+    const blob=await canvasParaBlob();
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=nomeArquivoArte('png');a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),1500);
+    document.getElementById('statusDados').textContent='Arte PNG exportada com resolução de 3188 × 3983 px.';
+  }catch(e){
+    alert('Não foi possível exportar a imagem. Verifique se o fundo foi carregado corretamente.');
   }
-  try {
-    const elemento = document.getElementById('arte');
-
-    if (!elemento) {
-        throw new Error('Elemento da arte não encontrado.');
-    }
-
-    // Aguarda o carregamento das imagens
-    await document.fonts.ready;
-
-    const imagens = Array.from(elemento.querySelectorAll('img'));
-
-    await Promise.all(imagens.map(img => {
-        if (img.complete) return Promise.resolve();
-
-        return new Promise(resolve => {
-            img.onload = resolve;
-            img.onerror = resolve;
-        });
-    }));
-
-    const canvas = await html2canvas(elemento, {
-        scale: 3,
-        useCORS: true,
-        allowTaint: false,
-        backgroundColor: null,
-        logging: false,
-        imageTimeout: 15000,
-        scrollX: 0,
-        scrollY: 0
-    });
-
-    const a = document.createElement('a');
-    const d = new Date();
-    a.download=`oportunidades_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}.png`;
-    a.href=canvas.toDataURL('image/png');a.click();
-  }catch(e){alert('Não foi possível exportar a imagem. Verifique se o arquivo de fundo está disponível.');}
+}
+async function copiarImagem(){
+  try{
+    if(!navigator.clipboard || !window.ClipboardItem)throw new Error('A cópia de imagem não está disponível neste navegador/contexto.');
+    const blob=await canvasParaBlob();
+    await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);
+    document.getElementById('statusDados').textContent='Imagem copiada. Agora você pode colar no Teams, WhatsApp ou outro aplicativo.';
+  }catch(e){
+    document.getElementById('statusDados').textContent='Não foi possível copiar diretamente. Use EXPORTAR ARTE PNG; a cópia exige navegador compatível e contexto seguro (HTTPS ou localhost).';
+  }
 }
 
 // Inicializa com uma linha vazia, sem exigir base de dados local.
