@@ -303,8 +303,19 @@ function renderArte(){
     const by=y+(Math.max(alturaLinha,bullet)-bullet)/2;
     ctxArte.fillStyle='#FFBB1F';
     ctxArte.beginPath();
+   
+    
     const bx=xLista, br=4;
-    ctxArte.moveTo(bx,by);ctxArte.lineTo(bx+bullet,by);ctxArte.lineTo(bx+bullet,by+bullet-br);ctxArte.quadraticCurveTo(bx+bullet,by+bullet,bx+bullet-br,by+bullet);ctxArte.lineTo(bx+br,by+bullet);ctxArte.quadraticCurveTo(bx,by+bullet,bx,by+bullet-br);ctxArte.closePath();ctxArte.fill();
+    
+    ctxArte.moveTo(bx, by);
+    ctxArte.lineTo(bx + bullet - br, by);
+    ctxArte.quadraticCurveTo(bx + bullet, by, bx + bullet, by + br);
+    ctxArte.lineTo(bx + bullet, by + bullet);
+    ctxArte.lineTo(bx + br, by + bullet);
+    ctxArte.quadraticCurveTo(bx, by + bullet, bx, by + bullet - br);
+    ctxArte.closePath();
+    ctxArte.fill();
+
     ctxArte.fillStyle='#02673C';
     linhas.forEach((linha,i)=>ctxArte.fillText(linha,xLista+bullet+gap,y+i*alturaLinha));
     y+=Math.max(alturaLinha,alturaTexto)+margem;
