@@ -23,5 +23,4 @@ Os sistemas são executados diretamente pelo navegador, sem necessidade de insta
 
 Os códigos-fonte, arquivos e versões dos projetos estão disponíveis no GitHub:
 
-- **[AUTOMAÇÃO | VAGAS DE EMPREGO](https://dev-vinus.github.io/BRC/VAGAS/index-v3.html)**  
-- **[GitHub | BRC AUTOMAÇÕES](https://github.com/dev-vinus/BRC)**
+- **[GITHUB | BRC AUTOMAÇÕES](https://github.com/dev-vinus/BRC)**
