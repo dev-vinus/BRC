@@ -2,7 +2,7 @@
 
 🚀 [AUTOMAÇÃO | VAGAS DE EMPREGO - Clique para abrir o sistema](https://dev-vinus.github.io/BRC/VAGAS/index-v3.html)
 
-🚀 [AUTOMAÇÃO | ANIVERSARIANTES - Clique para abrir o sistema](https://dev-vinus.github.io/BRC/VAGAS/index-v3.html)
+🚀 [AUTOMAÇÃO | ANIVERSARIANTES - Clique para abrir o sistema](https://dev-vinus.github.io/BRC/NIVER/index-v2.html)
 
 
 # Observações
