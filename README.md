@@ -7,10 +7,10 @@ Sistema web para automatizar tarefas
 
 🚀 [AUTOMAÇÃO | ANIVERSARIANTES - Clique aqui para abrir o sistema](https://dev-vinus.github.io/BRC/index-v3.html)
 
-## Repositórios
-O código-fonte e os arquivos do projeto estão disponíveis neste repositório:
 
-[GitHub - BRC](https://github.com/dev-vinus/BRC)
+# Observações
+
+Os sistemas são executados diretamente pelo navegador, sem necessidade de instalar um programa no computador.
 
 ## Tecnologias
 
@@ -18,6 +18,7 @@ O código-fonte e os arquivos do projeto estão disponíveis neste repositório:
 - CSS
 - JavaScript
 
-## Observação
+## Repositórios
+O código-fonte e os arquivos do projeto estão disponíveis neste repositório:
 
-Os sistemas são executados diretamente pelo navegador, sem necessidade de instalar um programa no computador.
+[GitHub - BRC](https://github.com/dev-vinus/BRC)
