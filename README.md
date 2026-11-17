@@ -15,8 +15,8 @@ Soluções digitais desenvolvidas para otimizar processos, automatizar tarefas e
 Os sistemas são executados diretamente pelo navegador, sem necessidade de instalação de programas ou softwares adicionais no computador.
 
 **Tecnologias utilizadas:**
-- HTML5
-- CSS3
+- HTML
+- CSS
 - JavaScript
 
 ## 💻 CÓDIGO-FONTE E REPOSITÓRIO
