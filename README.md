@@ -1,19 +1,26 @@
 # BRC AUTOMAÇÕES
 
-🚀 [AUTOMAÇÃO | VAGAS DE EMPREGO - Clique para abrir o sistema](https://dev-vinus.github.io/BRC/VAGAS/index-v3.html)
+Soluções digitais desenvolvidas para otimizar processos, automatizar tarefas e facilitar as rotinas operacionais.
 
-🚀 [AUTOMAÇÃO | ANIVERSARIANTES - Clique para abrir o sistema](https://dev-vinus.github.io/BRC/NIVER/index-v2.html)
+## 🚀 SISTEMAS DISPONÍVEIS
 
+- **[AUTOMAÇÃO | VAGAS DE EMPREGO](https://dev-vinus.github.io/BRC/VAGAS/index-v3.html)**  
+  Acesse o sistema para gerenciar e gerar artes de divulgação de oportunidades de emprego.
 
-# Observações
-Os sistemas são executados diretamente pelo navegador, sem necessidade de instalar um programa no computador.
+- **[AUTOMAÇÃO | ANIVERSARIANTES](https://dev-vinus.github.io/BRC/NIVER/index-v2.html)**  
+  Acesse o sistema para gerenciar e gerar materiais de divulgação dos aniversariantes.
 
-## Tecnologias
-- HTML
-- CSS
+## ℹ️ INFORMAÇÕES
+
+Os sistemas são executados diretamente pelo navegador, sem necessidade de instalação de programas ou softwares adicionais no computador.
+
+**Tecnologias utilizadas:**
+- HTML5
+- CSS3
 - JavaScript
 
-## Repositórios
-O código-fonte e os arquivos do projeto estão disponíveis neste repositório:
+## 💻 CÓDIGO-FONTE E REPOSITÓRIO
 
-[GitHub - BRC](https://github.com/dev-vinus/BRC)
+Os códigos-fonte, arquivos e versões dos projetos estão disponíveis no GitHub:
+
+**[GitHub | BRC AUTOMAÇÕES](https://github.com/dev-vinus/BRC)**
