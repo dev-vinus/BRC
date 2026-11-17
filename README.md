@@ -1,20 +1,10 @@
-# OPORTUNIDADES | VAGAS DE EMPREGO
-Sistema web para gerar arte de Vagas
+# BRC AUTOMAÇÕES
+Sistema web para automatizar tarefas
 
-## Acessar o sistema
+## Acessar sistemas
 
-🚀 [CLIQUE AQUI PARA ABRIR O SISTEMA](https://dev-vinus.github.io/BRC/index-v3.html)
-
-
-# ANIVERSARIANTES | LISTA E-MAIL E CHB
-Sistema web para gerar lista de aniversariantes do mês
-
-## Acessar o sistema
-
-🚀 [CLIQUE AQUI PARA ABRIR O SISTEMA](https://dev-vinus.github.io/BRC/index-v3.html)
-
-
-
+🚀 [AUTOMAÇÃO | VAGAS DE EMPREGO - Clique aqui para abrir o sistema](https://dev-vinus.github.io/BRC/index-v3.html)
+🚀 [AUTOMAÇÃO | ANIVERSARIANTES - Clique aqui para abrir o sistema](https://dev-vinus.github.io/BRC/index-v3.html)
 
 ## Repositórios
 O código-fonte e os arquivos do projeto estão disponíveis neste repositório:
