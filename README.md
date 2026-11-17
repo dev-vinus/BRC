@@ -1,6 +1,4 @@
 # BRC AUTOMAÇÕES
-Sistema web para automatizar tarefas
-
 ## Acessar sistemas
 
 🚀 [AUTOMAÇÃO | VAGAS DE EMPREGO - Clique aqui para abrir o sistema](https://dev-vinus.github.io/BRC/index-v3.html)
