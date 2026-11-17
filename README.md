@@ -1,8 +1,8 @@
 # BRC AUTOMAÇÕES
 
-🚀 [AUTOMAÇÃO | VAGAS DE EMPREGO - Clique aqui para abrir o sistema](https://dev-vinus.github.io/BRC/index-v3.html)
+🚀 [AUTOMAÇÃO | VAGAS DE EMPREGO - Clique para abrir o sistema](https://dev-vinus.github.io/BRC/index-v3.html)
 
-🚀 [AUTOMAÇÃO | ANIVERSARIANTES - Clique aqui para abrir o sistema](https://dev-vinus.github.io/BRC/index-v3.html)
+🚀 [AUTOMAÇÃO | ANIVERSARIANTES - Clique para abrir o sistema](https://dev-vinus.github.io/BRC/index-v3.html)
 
 
 # Observações
