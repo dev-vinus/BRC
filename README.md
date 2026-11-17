@@ -9,11 +9,9 @@ Sistema web para automatizar tarefas
 
 
 # Observações
-
 Os sistemas são executados diretamente pelo navegador, sem necessidade de instalar um programa no computador.
 
 ## Tecnologias
-
 - HTML
 - CSS
 - JavaScript
